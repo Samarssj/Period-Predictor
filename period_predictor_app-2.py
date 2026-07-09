@@ -57,7 +57,7 @@ from datetime import date, timedelta
 import base64
 import io
 
-st.set_page_config(page_title="Period Predictor", page_icon="🩸", layout="centered")
+st.set_page_config(page_title="FlowCast", page_icon="🩸", layout="centered")
 
 # =====================================================================
 # EMBEDDED DATASET (FedCycle data, base64-encoded CSV)
