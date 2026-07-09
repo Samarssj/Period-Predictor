@@ -4110,7 +4110,7 @@ model_bundle = train_model()
 # THEME TOGGLE (must be set before CSS is injected)
 # =====================================================================
 if "dark_mode" not in st.session_state:
-    st.session_state.dark_mode = False
+    st.session_state.dark_mode = True
 
 with st.sidebar:
     st.toggle("🌙 Dark mode", key="dark_mode")
@@ -4295,7 +4295,7 @@ if "cycles" not in st.session_state:
 
 st.markdown("""
 <div class="hero-banner">
-    <div class="hero-title">🌸 Period Predictor</div>
+    <div class="hero-title">🌸 FlowCast</div>
     <div class="hero-subtitle">Your personal cycle companion — log your history, get gentle, data-driven predictions</div>
 </div>
 """, unsafe_allow_html=True)
