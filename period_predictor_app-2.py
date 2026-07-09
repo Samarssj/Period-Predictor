@@ -35,8 +35,16 @@ for _import_name, _pip_name in _REQUIRED.items():
         _missing.append(_pip_name)
 
 if _missing:
-    print(f"Installing missing packages: {', '.join(_missing)} ...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", *_missing])
+    try:
+        print(f"Installing missing packages: {', '.join(_missing)} ...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", *_missing])
+    except Exception:
+        # On locked-down environments (e.g. Streamlit Cloud), pip installs at
+        # runtime aren't permitted. In that case, dependencies must instead be
+        # declared in requirements.txt so the platform installs them before
+        # the app starts. We silently continue here; if a package is truly
+        # missing the subsequent import will raise a clear error.
+        pass
 
 import streamlit as st
 import pandas as pd
@@ -4099,21 +4107,76 @@ def train_model():
 model_bundle = train_model()
 
 # =====================================================================
-# STYLING — soft, calming women's-health theme
+# THEME TOGGLE (must be set before CSS is injected)
 # =====================================================================
-st.markdown("""
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+
+with st.sidebar:
+    st.toggle("🌙 Dark mode", key="dark_mode")
+
+dark = st.session_state.dark_mode
+
+# =====================================================================
+# STYLING — soft, calming women's-health theme (light + dark variants)
+# =====================================================================
+if dark:
+    page_bg = """
+        radial-gradient(circle at 15% 20%, rgba(255, 105, 150, 0.10) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(180, 100, 220, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 25% 85%, rgba(255, 150, 120, 0.08) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(180, 120, 255, 0.10) 0%, transparent 45%),
+        linear-gradient(160deg, #1a1220 0%, #201524 40%, #1c1826 100%)
+    """
+    hero_bg = "linear-gradient(120deg, #7a2048 0%, #9d3d75 50%, #6b3fa0 100%)"
+    hero_title_color = "#ffe3ee"
+    hero_subtitle_color = "#f2c9dd"
+    card_bg = "rgba(45, 32, 55, 0.75)"
+    card_border = "rgba(244, 114, 182, 0.25)"
+    card_text = "#f3e6ee"
+    section_label_color = "#f472b6"
+    metric_bg = "linear-gradient(135deg, rgba(60,40,70,0.9), rgba(70,35,60,0.9))"
+    metric_border = "rgba(244, 114, 182, 0.3)"
+    metric_label_color = "#f9a8d4"
+    metric_value_color = "#fdf2f8"
+    sidebar_bg = "linear-gradient(180deg, #241a2e 0%, #1e1826 100%)"
+    sidebar_text = "#f3e6ee"
+    footer_bg = "rgba(45, 32, 55, 0.6)"
+    footer_text = "#f3e6ee"
+    body_text = "#f3e6ee"
+else:
+    page_bg = """
+        radial-gradient(circle at 15% 20%, rgba(255, 182, 193, 0.25) 0%, transparent 45%),
+        radial-gradient(circle at 85% 15%, rgba(221, 160, 221, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 25% 85%, rgba(255, 218, 185, 0.20) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(230, 190, 255, 0.20) 0%, transparent 45%),
+        linear-gradient(160deg, #fff5f7 0%, #fdf2f8 40%, #f5f0ff 100%)
+    """
+    hero_bg = "linear-gradient(120deg, #ff9a9e 0%, #fecfef 50%, #d9afd9 100%)"
+    hero_title_color = "#7a2048"
+    hero_subtitle_color = "#8a3f5c"
+    card_bg = "rgba(255, 255, 255, 0.78)"
+    card_border = "rgba(255, 182, 193, 0.35)"
+    card_text = "#3f2032"
+    section_label_color = "#9d174d"
+    metric_bg = "linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255, 240, 245, 0.9))"
+    metric_border = "rgba(244, 114, 182, 0.25)"
+    metric_label_color = "#be185d"
+    metric_value_color = "#3f2032"
+    sidebar_bg = "linear-gradient(180deg, #fff0f6 0%, #f5e9ff 100%)"
+    sidebar_text = "#3f2032"
+    footer_bg = "rgba(255, 255, 255, 0.6)"
+    footer_text = "#7a2048"
+    body_text = "#3f2032"
+
+st.markdown(f"""
 <style>
-    .stApp {
-        background:
-            radial-gradient(circle at 15% 20%, rgba(255, 182, 193, 0.25) 0%, transparent 45%),
-            radial-gradient(circle at 85% 15%, rgba(221, 160, 221, 0.22) 0%, transparent 45%),
-            radial-gradient(circle at 25% 85%, rgba(255, 218, 185, 0.20) 0%, transparent 45%),
-            radial-gradient(circle at 90% 80%, rgba(230, 190, 255, 0.20) 0%, transparent 45%),
-            linear-gradient(160deg, #fff5f7 0%, #fdf2f8 40%, #f5f0ff 100%);
+    .stApp {{
+        background: {page_bg};
         background-attachment: fixed;
-    }
-    .hero-banner {
-        background: linear-gradient(120deg, #ff9a9e 0%, #fecfef 50%, #d9afd9 100%);
+    }}
+    .hero-banner {{
+        background: {hero_bg};
         border-radius: 20px;
         padding: 2.2rem 2rem;
         margin-bottom: 1.8rem;
@@ -4121,8 +4184,8 @@ st.markdown("""
         text-align: center;
         position: relative;
         overflow: hidden;
-    }
-    .hero-banner::before {
+    }}
+    .hero-banner::before {{
         content: "🌸 🌷 🌺 🌸 🌷";
         position: absolute;
         top: -10px; left: 0; right: 0;
@@ -4130,82 +4193,96 @@ st.markdown("""
         opacity: 0.35;
         letter-spacing: 2rem;
         white-space: nowrap;
-    }
-    .hero-title {
+    }}
+    .hero-title {{
         font-size: 2.3rem;
         font-weight: 800;
-        color: #7a2048;
+        color: {hero_title_color};
         margin: 0.3rem 0 0.2rem 0;
         letter-spacing: -0.5px;
-    }
-    .hero-subtitle {
+    }}
+    .hero-subtitle {{
         font-size: 1.02rem;
-        color: #8a3f5c;
+        color: {hero_subtitle_color};
         font-weight: 500;
-        opacity: 0.9;
-    }
-    .card {
-        background: rgba(255, 255, 255, 0.72);
+        opacity: 0.95;
+    }}
+    .card {{
+        background: {card_bg};
         border-radius: 16px;
         padding: 1.4rem 1.6rem;
         margin-bottom: 1.2rem;
         box-shadow: 0 4px 16px rgba(200, 100, 150, 0.08);
-        border: 1px solid rgba(255, 182, 193, 0.35);
-    }
-    .section-label {
+        border: 1px solid {card_border};
+        color: {card_text} !important;
+    }}
+    .card, .card p, .card div, .card span, .card b, .card li {{
+        color: {card_text} !important;
+    }}
+    .section-label {{
         font-size: 1.15rem;
         font-weight: 700;
-        color: #9d174d;
+        color: {section_label_color} !important;
         margin-bottom: 0.6rem;
         display: flex;
         align-items: center;
         gap: 0.5rem;
-    }
-    div[data-testid="stMetric"] {
-        background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255, 240, 245, 0.9));
+    }}
+    div[data-testid="stMetric"] {{
+        background: {metric_bg};
         border-radius: 14px;
         padding: 1rem 1.2rem;
-        border: 1px solid rgba(244, 114, 182, 0.25);
+        border: 1px solid {metric_border};
         box-shadow: 0 3px 10px rgba(219, 39, 119, 0.08);
-    }
-    div[data-testid="stMetric"] label {
-        color: #be185d !important;
+    }}
+    div[data-testid="stMetric"] label {{
+        color: {metric_label_color} !important;
         font-weight: 600 !important;
-    }
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #fff0f6 0%, #f5e9ff 100%);
+    }}
+    div[data-testid="stMetric"] div[data-testid="stMetricValue"] {{
+        color: {metric_value_color} !important;
+    }}
+    section[data-testid="stSidebar"] {{
+        background: {sidebar_bg};
         border-right: 1px solid rgba(244, 114, 182, 0.2);
-    }
-    section[data-testid="stSidebar"] h2 {
-        color: #9d174d;
-    }
-    .stButton>button {
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: {sidebar_text} !important;
+    }}
+    section[data-testid="stSidebar"] h2 {{
+        color: {section_label_color} !important;
+    }}
+    .stButton>button {{
         background: linear-gradient(120deg, #f472b6, #c084fc);
-        color: white;
+        color: white !important;
         border: none;
         border-radius: 10px;
         font-weight: 600;
         padding: 0.5rem 1rem;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-    .stButton>button:hover {
+    }}
+    .stButton>button:hover {{
         transform: translateY(-1px);
         box-shadow: 0 6px 14px rgba(219, 39, 119, 0.25);
-        color: white;
-    }
-    div[data-testid="stDataFrame"] {
+        color: white !important;
+    }}
+    div[data-testid="stDataFrame"] {{
         border-radius: 12px;
         overflow: hidden;
-    }
-    .footer-note {
-        background: rgba(255, 255, 255, 0.6);
+    }}
+    .footer-note {{
+        background: {footer_bg};
         border-left: 4px solid #f472b6;
         border-radius: 8px;
         padding: 0.8rem 1rem;
         font-size: 0.85rem;
-        color: #7a2048;
+        color: {footer_text} !important;
         margin-top: 1.5rem;
-    }
+    }}
+    /* General body text so captions/markdown outside cards stay readable too */
+    .stMarkdown, .stCaption, p, span, label {{
+        color: {body_text};
+    }}
 </style>
 """, unsafe_allow_html=True)
 
