@@ -53,4 +53,5 @@ requirements.txt          # streamlit, pandas, numpy, scikit-learn
 ## Disclaimer
 
 This tool provides estimates for informational purposes only. It is not a substitute for medical advice, diagnosis, or contraception. Please consult a healthcare provider for medical guidance.
-<img width="1440" height="900" alt="Screenshot 2026-07-09 at 16 06 38" src="https://github.com/user-attachments/assets/6417addb-3e3c-4fd5-9ea1-615d60ad03a6" />
+<img width="1440" height="900" alt="Screenshot 2026-07-13 at 16 38 23" src="https://github.com/user-attachments/assets/dfcec8be-bf34-48ed-a831-ab72a9620bbd" />
+
